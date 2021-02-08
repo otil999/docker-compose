@@ -1,0 +1,33 @@
+services:
+  lldap:
+    image: lldap/lldap:stable
+    networks:
+      - lldap
+    ports:
+      - 3890:3890      # LDAP
+      - 17170:17170    # web UI
+    environment:
+      - LLDAP_LDAP_BASE_DN=dc=otilsoft,dc=hu
+      - LLDAP_LDAP_USER_DN=admin
+      - LLDAP_LDAP_USER_PASS=otilsoft
+      - LLDAP_JWT_SECRET=otilsoft-jwt-secret
+      - LLDAP_KEY_SEED=otilsoft-key-seed
+      - TZ=Europe/Budapest
+    volumes:
+      - lldap-data:/data
+    healthcheck:
+      test: ["CMD", "/app/lldap", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  lldap:
+    ipam:
+      config:
+        - subnet: 10.0.4.0/24
+
+volumes:
+  lldap-data:
+    external: true

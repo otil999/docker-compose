@@ -1,0 +1,42 @@
+services:
+  ldap:
+    image: osixia/openldap:stable
+    networks:
+      - ldap
+    environment:
+      - LDAP_ORGANISATION=OtilSoft
+      - LDAP_DOMAIN=otilsoft.hu
+      - LDAP_ADMIN_PASSWORD=otilsoft
+    volumes:
+      - openldap-config:/etc/ldap/slapd.d
+      - openldap-data:/var/lib/ldap
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost", "-b", "", "-s", "base"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  admin:
+    image: osixia/phpldapadmin:stable
+    networks:
+      - ldap
+    ports:
+      - 6443:443
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=ldap
+    depends_on:
+      ldap:
+        condition: service_healthy
+
+networks:
+  ldap:
+    ipam:
+      config:
+        - subnet: 10.0.3.0/24
+
+volumes:
+  openldap-config:
+    external: true
+  openldap-data:
+    external: true
